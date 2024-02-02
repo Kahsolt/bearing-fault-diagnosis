@@ -5,13 +5,22 @@
 from pathlib import Path
 from typing import *
 
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch import Tensor
 import numpy as np
 from numpy import ndarray
 import librosa as L
 from tqdm import tqdm
 
-BASE_PATH = Path(__file__).parent
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+BASE_PATH = Path(__file__).parent.relative_to(Path.cwd())
 DATA_PATH = BASE_PATH / 'data'
+LOG_PATH = BASE_PATH / 'log' ; LOG_PATH.mkdir(exist_ok=True)
+MODEL_PATH = LOG_PATH / 'model.pth'
+SUBMIT_PATH = LOG_PATH / 'submit.csv'
 
 LABLES = {
   0: '正常状态',
@@ -19,15 +28,22 @@ LABLES = {
   2: '外圈故障',
   3: '滚动体故障',
 }
+SEED = 114514
 
 
-def get_data_train():
+def get_data_train() -> Tuple[ndarray, ndarray]:
   data = np.load(DATA_PATH / 'train.npz')
   return data['X'], data['Y']
 
-def get_data_test(split:str='test1'):
+def get_data_test(split:str='test1') -> ndarray:
   data = np.load(DATA_PATH / f'{split}.npz')
   return data['X']
+
+def get_submit_pred_maybe(nlen:int) -> ndarray:
+  if SUBMIT_PATH.exists():
+    return np.loadtxt(SUBMIT_PATH, dtype=np.int32)
+  else:
+    return np.ones(nlen, dtype=np.int32) * 4
 
 
 def minmax_norm(X:ndarray) -> ndarray:

@@ -20,10 +20,10 @@ def process_train(fp_in:Path) -> Dict[str, ndarray]:
     label = int(Path(zinfo.filename).parent.name)
     Y.append(label)
     with zf.open(zinfo) as fh:
-      data = np.loadtxt(fh).astype(np.float32)
+      data = np.loadtxt(fh, dtype=np.float32)
     X.append(data)
-  X = np.stack(X, axis=0)
-  Y = np.stack(Y, axis=0)
+  X = np.stack(X, axis=0).astype(np.float32)
+  Y = np.stack(Y, axis=0).astype(np.uint8)
   return {'X': X, 'Y': Y}
 
 
@@ -35,9 +35,9 @@ def process_test(fp_in:Path) -> Dict[str, ndarray]:
   for zinfo in tqdm(zinfos):
     if zinfo.is_dir(): continue
     with zf.open(zinfo) as fh:
-      data = np.loadtxt(fh).astype(np.float32)
+      data = np.loadtxt(fh, dtype=np.float32)
     X.append(data)
-  X = np.stack(X, axis=0)
+  X = np.stack(X, axis=0).astype(np.float32)
   return {'X': X}
 
 
