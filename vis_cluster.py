@@ -2,59 +2,50 @@
 # Author: Armit
 # Create Time: 2024/02/02
 
-from sklearnex import patch_sklearn ; patch_sklearn()
+# KMeans on stft (freq-domain)
+
+import random
+from vis_pca import *
 from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
 
-import matplotlib.pyplot as plt
-
-from utils import *
-
-
-def plot(X:ndarray, Y:ndarray, pred:ndarray, dim:int=3):
-  for title, c in zip(['label', 'cluster'], [Y, pred]):
-    plt.clf()
-    ax = plt.subplot(projection='3d')
-    if dim == 2:
-      ax.scatter(X[:, 0], X[:, 1], c=c, cmap='tab10')
-    if dim == 3:
-      ax.scatter3D(X[:, 0], X[:, 1], X[:, 2], c=c, cmap='tab10')
-    plt.title(title)
-    plt.show()
+n_fft   = 256
+hop_len = 16
+win_len = 64
 
 
-def run():
-  split = 'all'
-  if split == 'all':
-    X1, Y1 = get_data_train()
-    X2 = get_data_test('test1')
-    Y2 = np.ones(len(X2), dtype=np.int32) * 4
-    X = np.concatenate([X1, X2], axis=0)
-    Y = np.concatenate([Y1, Y2], axis=0)
-  elif split == 'train':
-    X, Y = get_data_train()
-  else:
-    X = get_data_test(split)
-    Y = np.ones(len(X), dtype=np.int32) * 4
-  print('X.shape:', X.shape)
-  print('Y.shape:', Y.shape)
-  print('lables:', set(Y))
+def get_spec(y:ndarray) -> ndarray:
+  D = L.stft(y, n_fft=n_fft, hop_length=hop_len, win_length=win_len)
+  M = np.clip(np.log(np.abs(D) + 1e-15), a_min=1e-5, a_max=None)
+  return M
 
+
+def run(args):
+  X, Y = get_XY(args)
   X = minmax_norm(X)
 
-  for dim in [3]:
-    pca = PCA(n_components=dim)
-    X_pca = pca.fit_transform(X)
-    print('pca.explained_variance_ratio_', pca.explained_variance_)
-    print('pca.explained_variance_ratio_', pca.explained_variance_ratio_)
-    print('pca.explained_variance_ratio_', sum(pca.explained_variance_ratio_))
+  X_spec, Y_spec = [], []
+  for x, y in zip(X, Y):
+    frames = get_spec(x)
+    X_spec.append(frames)
+    Y_spec.extend([y] * len(frames))
+  X_spec = np.concatenate(X_spec, axis=0)
+  Y_spec = np.asarray(Y_spec)
+  print('X_spec.shape:', X_spec.shape)
+  print('Y_spec.shape:', Y_spec.shape)
 
-    kmeans = KMeans(n_clusters=8, init='k-means++')
-    pred = kmeans.fit_predict(X_pca, Y)
-    print('kmeans.inertia_', kmeans.inertia_)
+  idx = random.sample(range(len(X_spec)), k=10000)
+  X_s = X_spec[idx]
+  Y_s = Y_spec[idx]
+  print('X_s.shape:', X_s.shape)
+  print('Y_s.shape:', Y_s.shape)
 
-    plot(X_pca, Y, pred, dim)
+  plot(pca(X_s), Y_s)
+
+  kmeans = KMeans(n_clusters=16, init='k-means++')
+  pred = kmeans.fit_predict(X_s)
+  print('kmeans.inertia_', kmeans.inertia_)
+  plot(pca(X_s), pred)
 
 
 if __name__ == '__main__':
-  run()
+  run(get_args())
