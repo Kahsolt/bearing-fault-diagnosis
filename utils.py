@@ -28,3 +28,17 @@ def get_data_train():
 def get_data_test(split:str='test1'):
   data = np.load(DATA_PATH / f'{split}.npz')
   return data['X']
+
+
+def minmax_norm(X:ndarray) -> ndarray:
+  X_min = X.min(axis=-1, keepdims=True)
+  X_max = X.max(axis=-1, keepdims=True)
+  X = (X - X_min) / (X_max - X_min)
+  X -= 0.5
+  return X
+
+def std_norm(X:ndarray) -> ndarray:
+  X_avg = X.mean(axis=-1, keepdims=True)
+  X_std = X.std (axis=-1, keepdims=True)
+  X = (X - X_avg) / X_std
+  return X

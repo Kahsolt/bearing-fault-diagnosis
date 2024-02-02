@@ -24,15 +24,25 @@ def plot(X:ndarray, Y:ndarray, pred:ndarray, dim:int=3):
 
 
 def run():
-  split = 'train'
-  if split == 'train':
+  split = 'all'
+  if split == 'all':
+    X1, Y1 = get_data_train()
+    X2 = get_data_test('test1')
+    Y2 = np.ones(len(X2), dtype=np.int32) * 4
+    X = np.concatenate([X1, X2], axis=0)
+    Y = np.concatenate([Y1, Y2], axis=0)
+  elif split == 'train':
     X, Y = get_data_train()
   else:
     X = get_data_test(split)
-    Y = [0] * len(X)
+    Y = np.ones(len(X), dtype=np.int32) * 4
+  print('X.shape:', X.shape)
+  print('Y.shape:', Y.shape)
   print('lables:', set(Y))
 
-  for dim in [2, 3]:
+  X = minmax_norm(X)
+
+  for dim in [3]:
     pca = PCA(n_components=dim)
     X_pca = pca.fit_transform(X)
     print('pca.explained_variance_ratio_', pca.explained_variance_)
