@@ -8,6 +8,7 @@ import tkinter.messagebox as tkmsg
 from traceback import print_exc, format_exc
 
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import seaborn as sns
 
@@ -97,11 +98,11 @@ class App:
     frm2 = ttk.Frame(wnd)
     frm2.pack(side=tk.BOTTOM, expand=tk.YES, fill=tk.BOTH)
     if True:
-      fig, [ax1, ax2] = plt.subplots(2, 1)
+      fig, axs = plt.subplots(3, 1)
       fig.tight_layout()
       cvs = FigureCanvasTkAgg(fig, frm2)
       cvs.get_tk_widget().pack(expand=tk.YES, fill=tk.BOTH)
-      self.fig, self.ax1, self.ax2, self.cvs = fig, ax1, ax2, cvs
+      self.fig, self.axs, self.cvs = fig, axs, cvs
 
   def change_split(self):
     split = self.var_split.get()
@@ -137,13 +138,15 @@ class App:
       y = self.Y[idx]
       D = L.stft(x, n_fft=n_fft, hop_length=hop_len, win_length=win_len)
       M = np.clip(np.log(np.abs(D) + 1e-15), a_min=1e-5, a_max=None)
+      c0 = L.feature.rms(y=x, frame_length=n_fft, hop_length=hop_len, pad_mode='reflect')[0]
+      zcr = L.feature.zero_crossing_rate(x, frame_length=n_fft, hop_length=hop_len)[0]
 
+      self.axs: List[Axes]
+      ax0, ax1, ax2 = self.axs
       if idx_changed:
-        self.ax1.cla()
-        self.ax1.plot(x, c=COLOR_MAP[y])
-      self.ax2.cla()
-      sns.heatmap(M, ax=self.ax2, cbar_ax=self.ax2)
-      self.ax2.invert_yaxis()
+        ax0.cla() ; ax0.plot(x, c=COLOR_MAP[y])
+      ax1.cla() ; ax1.plot(c0, label='rms') ; ax1.plot(zcr, label='zcr') ; ax1.legend(loc='upper right')
+      ax2.cla() ; sns.heatmap(M, ax=ax2, cbar=False) ; ax2.invert_yaxis()
       self.cvs.draw()
 
       self.cur_idx = idx
