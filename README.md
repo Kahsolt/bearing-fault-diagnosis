@@ -21,6 +21,9 @@ Team Name: ⚪滚滚
 
 #### refenrence
 
+- 轴承故障诊断: [https://zhuanlan.zhihu.com/p/671235819](https://zhuanlan.zhihu.com/p/671235819)
+- 四种轴承故障信号图: [https://zhuanlan.zhihu.com/p/531748264](https://zhuanlan.zhihu.com/p/531748264)
+- 轴承故障检测训练赛: [https://challenge.datacastle.cn/v3/cmptDetail.html?id=248](https://challenge.datacastle.cn/v3/cmptDetail.html?id=248)
 - bearing_detection_by_conv1d: [https://github.com/xiaosongshine/bearing_detection_by_conv1d](https://github.com/xiaosongshine/bearing_detection_by_conv1d)
 
 ----
