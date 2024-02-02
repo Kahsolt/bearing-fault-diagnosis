@@ -7,8 +7,8 @@ import zipfile
 from utils import *
 
 DATA_FILES = {
-  'train': 'train.zip',
-  'test': 'test1.zip',
+  'train.zip': 'train',
+  'test1.zip': 'test',
 }
 
 
@@ -42,7 +42,7 @@ def process_test(fp_in:Path) -> Dict[str, ndarray]:
 
 
 if __name__ == '__main__':
-  for split, fn in DATA_FILES.items():
+  for fn, split in DATA_FILES.items():
     fp_in = DATA_PATH / fn
     fp_out = fp_in.with_suffix('.npz')
     if fp_out.exists():

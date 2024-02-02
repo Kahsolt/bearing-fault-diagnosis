@@ -25,6 +25,6 @@ def get_data_train():
   data = np.load(DATA_PATH / 'train.npz')
   return data['X'], data['Y']
 
-def get_data_test():
-  data = np.load(DATA_PATH / 'test1.npz')
+def get_data_test(split:str='test1'):
+  data = np.load(DATA_PATH / f'{split}.npz')
   return data['X']

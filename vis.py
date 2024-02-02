@@ -14,7 +14,7 @@ import seaborn as sns
 from utils import *
 
 COLOR_MAP = ['r', 'g', 'b', 'grey']
-SPLITS = ['train', 'test']
+SPLITS = ['train', 'test1']
 N_FFT_LIST = [2**i for i in range(3, 12)]   # 8~2048
 HOP_LEN_LIST = [e//2 for e in N_FFT_LIST]   # 4~1024
 WIN_LEN_LIST = [e//2 for e in N_FFT_LIST]   # 4~1024
@@ -107,8 +107,8 @@ class App:
     split = self.var_split.get()
     if split == 'train':
       self.X, self.Y = get_data_train()
-    elif split == 'test':
-      self.X = get_data_test()
+    else:
+      self.X = get_data_test(split)
       self.Y = [0] * len(self.X)
     nlen = len(self.X)
     self.sc.config(to=nlen - 1)
