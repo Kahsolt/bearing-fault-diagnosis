@@ -2,33 +2,44 @@
 # Author: Armit
 # Create Time: 2024/02/01
 
+from argparse import ArgumentParser
+
 from torch.optim import SGD, Adam, Adagrad, Adadelta, AdamW
 
-from data import SignalTrainDataset, DataLoader
-from model import SimpleConv1d
-
+from data import *
+from model import *
 from utils import *
 
 EPOCH = 10
 BATCH_SIZE = 20
 LR = 0.001
 
+MODELS = ['SimpleConv1d', 'SimpleConv2d', 'MLP3d']
+DATASET_CLS = {
+  'SimpleConv1d': SignalTrainDataset,
+  'SimpleConv2d': SpecTrainDataset,
+  'MLP3d': SignalPCATrainDataset,
+}
 
-def run():
-  model = SimpleConv1d().to(device)
+
+def run(args):
+  model = globals()[args.model]()
   print(model)
   print('param_cnt:', sum([p.numel() for p in model.parameters()]))
 
+  fp = LOG_PATH / f'{args.model}.pth'
   if not 'from pretrained':
     try:
-      print('>> load model ckpt...')
-      state_dict = torch.load(MODEL_PATH)
+      print(f'>> load model ckpt from {fp}...')
+      state_dict = torch.load(fp)
       model.load_state_dict(state_dict)
     except: pass
+  model = model.to(device)
 
-  trainset = SignalTrainDataset('train', transform=minmax_norm)
+  dataset_cls = DATASET_CLS[args.model]
+  trainset = dataset_cls('train', transform=minmax_norm)
   trainloader = DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
-  validset = SignalTrainDataset('valid', transform=minmax_norm)
+  validset = dataset_cls('valid', transform=minmax_norm)
   validloader = DataLoader(validset, batch_size=BATCH_SIZE, shuffle=False, drop_last=False)
   print('len(trainset):', len(trainset), 'len(trainloader):', len(trainloader))
   print('len(validset):', len(validset), 'len(validloader):', len(validloader))
@@ -73,9 +84,15 @@ def run():
 
       if acc > best_acc:
         best_acc = acc
-        print(f'>> save new best to {MODEL_PATH}')
-        torch.save(model.state_dict(), MODEL_PATH)
+        print(f'>> save new best to {fp}')
+        torch.save(model.state_dict(), fp)
+
+
+def get_args():
+  parser = ArgumentParser()
+  parser.add_argument('-M', '--model', default='SimpleConv1d', choices=MODELS)
+  return parser.parse_args()
 
 
 if __name__ == '__main__':
-  run()
+  run(get_args())

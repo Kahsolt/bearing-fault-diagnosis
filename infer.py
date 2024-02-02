@@ -2,21 +2,27 @@
 # Author: Armit
 # Create Time: 2024/02/01
 
-from data import SignalTestDataset, DataLoader
-from model import SimpleConv1d
+from train import *
 
-from utils import *
+
+DATASET_CLS = {
+  'SimpleConv1d': SignalTestDataset,
+  'SimpleConv2d': SpecTestDataset,
+  'MLP3d': SignalPCATestDataset,
+}
 
 
 @torch.inference_mode()
-def run():
-  model = SimpleConv1d()
-  state_dict = torch.load(MODEL_PATH)
+def run(args):
+  model = globals()[args.model]()
+  state_dict = torch.load(LOG_PATH / f'{args.model}.pth')
   model.load_state_dict(state_dict)
   model = model.eval().to(device)
 
-  testset = SignalTestDataset('test1', transform=minmax_norm)
+  dataset_cls = DATASET_CLS[args.model]
+  testset = dataset_cls('test1', transform=minmax_norm)
   testloader = DataLoader(testset, batch_size=1, shuffle=False)
+  print('len(testset):', len(testset), 'len(testloader):', len(testloader))
 
   preds = []
   for X in tqdm(testloader):
@@ -33,4 +39,4 @@ def run():
 
 
 if __name__ == '__main__':
-  run()
+  run(get_args())

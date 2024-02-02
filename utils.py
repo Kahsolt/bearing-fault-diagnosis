@@ -19,7 +19,6 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 BASE_PATH = Path(__file__).parent.relative_to(Path.cwd())
 DATA_PATH = BASE_PATH / 'data'
 LOG_PATH = BASE_PATH / 'log' ; LOG_PATH.mkdir(exist_ok=True)
-MODEL_PATH = LOG_PATH / 'model.pth'
 SUBMIT_PATH = LOG_PATH / 'submit.csv'
 
 LABLES = {
@@ -58,3 +57,9 @@ def std_norm(X:ndarray) -> ndarray:
   X_std = X.std (axis=-1, keepdims=True)
   X = (X - X_avg) / X_std
   return X
+
+
+def get_spec(y:ndarray, n_fft:int=256, hop_len:int=16, win_len:int=64) -> ndarray:
+  D = L.stft(y, n_fft=n_fft, hop_length=hop_len, win_length=win_len)
+  M = np.clip(np.log(np.abs(D) + 1e-15), a_min=1e-5, a_max=None)
+  return M
