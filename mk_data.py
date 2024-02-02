@@ -30,7 +30,9 @@ def process_train(fp_in:Path) -> Dict[str, ndarray]:
 def process_test(fp_in:Path) -> Dict[str, ndarray]:
   X = []
   zf = zipfile.ZipFile(fp_in)
-  for zinfo in tqdm(zf.infolist()):
+  zinfos = zf.infolist()    # NOTE: 保持有序！
+  zinfos.sort(key=lambda zinfo: int(Path(zinfo.filename).stem))
+  for zinfo in tqdm(zinfos):
     if zinfo.is_dir(): continue
     with zf.open(zinfo) as fh:
       data = np.loadtxt(fh).astype(np.float32)
