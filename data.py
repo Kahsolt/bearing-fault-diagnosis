@@ -99,8 +99,49 @@ class SignalPCATestDataset(SignalTestDataset):
     return X_pca
 
 
+class NaiveSignalDataset(Dataset):
+
+  def __init__(self, split:str='train', transform:Callable=None, ratio=0.3):
+    import pandas as pd
+    fp = BASE_PATH / 'repo' / 'bearing_detection_by_conv1d' / 'Bear_data' / 'train.csv'
+    df = pd.read_csv(fp, header='infer')
+    Y = df['label'].to_numpy()
+    del df['label'], df['id']
+    X = df.to_numpy()   # (N=792, L=6000)
+    #if transform: X = transform(X)
+    self.X, self.Y = X, Y
+
+    self.data = [(x, y) for x, y in zip(X, Y)]
+    random.seed(SEED)
+    random.shuffle(self.data)
+    cp = int(len(self.data) * ratio)
+    if split == 'train':
+      self.data = self.data[:-cp]
+    else:
+      self.data = self.data[-cp:]
+
+  def __len__(self):
+    return len(self.data)
+
+  def __getitem__(self, idx):
+    X, Y = self.data[idx]
+    return np.expand_dims(X, axis=0), Y
+
+
+class NaiveSignal4Dataset(NaiveSignalDataset):
+
+  def __getitem__(self, idx):
+    X, Y = self.data[idx]
+    if   Y in [1, 4, 7]: Y = 2
+    elif Y in [2, 5, 8]: Y = 1
+    elif Y in [3, 6, 9]: Y = 3
+    else:                Y = 0 
+    return np.expand_dims(X, axis=0), Y
+
+
 if __name__ == '__main__':
-  dataset = SignalTrainDataset()
+  #dataset = SignalTrainDataset()
+  dataset = NaiveSignalDataset()
   for X, Y in iter(dataset):
     print('X:', X)
     print('X.shape:', X.shape)

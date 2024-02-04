@@ -10,12 +10,14 @@ from data import *
 from model import *
 from utils import *
 
-EPOCH = 10
+EPOCH = 50
 BATCH_SIZE = 20
-LR = 0.001
+LR = 0.01
 
-MODELS = ['SimpleConv1d', 'SimpleConv2d', 'MLP3d']
+MODELS = ['NaiveConv1d', 'Naive4Conv1d', 'SimpleConv1d', 'SimpleConv2d', 'MLP3d']
 DATASET_CLS = {
+  'NaiveConv1d': NaiveSignalDataset,
+  'Naive4Conv1d': NaiveSignal4Dataset,
   'SimpleConv1d': SignalTrainDataset,
   'SimpleConv2d': SpecTrainDataset,
   'MLP3d': SignalPCATrainDataset,
@@ -24,8 +26,13 @@ DATASET_CLS = {
 
 def run(args):
   model = globals()[args.model]()
+
+  model: Naive4Conv1d
+  state_dict = torch.load(LOG_PATH / 'NaiveConv1d.pth')
+  model.load_weights(state_dict)
+
   print(model)
-  print('param_cnt:', sum([p.numel() for p in model.parameters()]))
+  print('param_cnt:', sum([p.numel() for p in model.parameters() if p.requires_grad]))
 
   fp = LOG_PATH / f'{args.model}.pth'
   if not 'from pretrained':

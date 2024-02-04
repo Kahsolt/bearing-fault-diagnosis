@@ -5,6 +5,56 @@
 from utils import *
 
 
+# ref: https://github.com/xiaosongshine/bearing_detection_by_conv1d
+class NaiveConv1d(nn.Module):
+
+  def __init__(self, num_classes=10):
+    super().__init__()
+
+    # x1024 downsample: [1, 6000] => [512, 94]
+    self.features = nn.Sequential(
+      nn.Conv1d(  1,  16, kernel_size=8, stride=2),            nn.ReLU(inplace=True),
+      nn.Conv1d( 16,  16, kernel_size=8, stride=2, padding=3), nn.ReLU(inplace=True), nn.MaxPool1d(kernel_size=2),
+      nn.Conv1d( 16,  64, kernel_size=4, stride=2, padding=2), nn.ReLU(inplace=True),
+      nn.Conv1d( 64,  64, kernel_size=4, stride=2, padding=2), nn.ReLU(inplace=True), nn.MaxPool1d(kernel_size=2),
+      nn.Conv1d( 64, 256, kernel_size=4, stride=2, padding=2), nn.ReLU(inplace=True),
+      nn.Conv1d(256, 256, kernel_size=4, stride=2, padding=2), nn.ReLU(inplace=True), nn.MaxPool1d(kernel_size=2),
+      nn.Conv1d(256, 512, kernel_size=2, stride=1, padding=1), nn.ReLU(inplace=True),
+      nn.Conv1d(512, 512, kernel_size=2, stride=1, padding=1), nn.ReLU(inplace=True), nn.MaxPool1d(kernel_size=2),
+    )
+    self.avgpool = nn.AdaptiveAvgPool1d(1)
+    self.dropout = nn.Dropout(0.3)
+    self.fc = nn.Linear(512, num_classes)
+
+  def forward(self, x:Tensor) -> Tensor:
+    x = self.features(x)  # [B, C=512, L=7]
+    x = self.avgpool(x)   # [B, C=512, L=1]
+    x = x.view(x.size(0), -1)
+    x = self.dropout(x)   # [B, C=512]
+    return self.fc(x)     # [B, NC]
+
+
+class Naive4Conv1d(nn.Module):
+
+  def __init__(self, num_classes=4):
+    super().__init__()
+
+    self.base = NaiveConv1d()
+    self.fc = nn.Sequential(
+      nn.Linear(10, 16),
+      nn.ReLU(),
+      nn.Linear(16, num_classes),
+    )
+
+  def load_weights(self, state_dict:Dict[str, Tensor]):
+    self.base.load_state_dict(state_dict)
+    self.base.requires_grad_(False)
+
+  def forward(self, x:Tensor) -> Tensor:
+    x = self.base(x)  # [B, D=10]
+    return self.fc(x) # [B, NC=4]
+
+
 class SimpleConv1d(nn.Module):
 
   def __init__(self, num_classes=4):
@@ -73,8 +123,10 @@ class MLP3d(nn.Module):
 
 
 if __name__ == '__main__':
-  model = SimpleConv1d()
-  X = torch.randn(1, 1, 4096)
+  #model = SimpleConv1d()
+  #X = torch.randn(1, 1, 4096)
+  model = NaiveConv1d()
+  X = torch.randn(1, 1, 6000)
   logits = model(X)
   print(model)
   print('X.shape:', X.shape)
