@@ -14,7 +14,7 @@ import seaborn as sns
 
 from utils import *
 
-COLOR_MAP = ['r', 'g', 'b', 'grey']
+COLOR_MAP = ['grey', 'r', 'g', 'b']
 SPLITS = ['train', 'test1']
 N_FFT_LIST = [2**i for i in range(3, 12)]   # 8~2048
 HOP_LEN_LIST = [e//2 for e in N_FFT_LIST]   # 4~1024

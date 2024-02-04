@@ -11,7 +11,6 @@ from sklearn.cluster import KMeans
 
 def run(args):
   X, Y = get_XY(args)
-  X = minmax_norm(X)
 
   X_spec, Y_spec = [], []
   for x, y in zip(X, Y):
