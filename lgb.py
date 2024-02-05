@@ -89,7 +89,7 @@ def extract_segmented_features(data, segment_size=256, start_point=128):
   return combined_features_df, feature_names
 
 
-test_path="data/test1/"
+test_path = DATA_PROVIDERS['contest'] / 'test1'
 dfs = []
 for i in range(0, 2000):
   file_path=test_path+str(i)+".txt"
@@ -101,7 +101,7 @@ df_test = pd.concat(dfs).reset_index(drop=True)
 
 df_all = []
 for i in range(4):
-  train_path="data/train/%d"%i
+  train_path = DATA_PROVIDERS['contest'] / 'train' / str(i)
   dfs = []
   for file_name in os.listdir(train_path):
     if file_name.endswith('.txt'):

@@ -13,6 +13,7 @@ from matplotlib.axes import Axes
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import seaborn as sns
 
+from data import *
 from utils import *
 
 COLOR_MAP = ['grey', 'r', 'g', 'b']

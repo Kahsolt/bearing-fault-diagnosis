@@ -9,6 +9,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
+from torch.nn import Module as Model
 import numpy as np
 from numpy import ndarray
 import librosa as L
@@ -18,9 +19,21 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 BASE_PATH = Path(__file__).parent.relative_to(Path.cwd())
 DATA_PATH = BASE_PATH / 'data'
+REPO_PATH = BASE_PATH / 'repo'
 LOG_PATH = BASE_PATH / 'log' ; LOG_PATH.mkdir(exist_ok=True)
-SUBMIT_PATH = LOG_PATH / 'submit.csv'
 
+DATA_PROVIDERS = {
+  'contest': BASE_PATH / 'data' / 'contest',
+  'datacastle': REPO_PATH / 'data' / 'bearing_detection_by_conv1d' / 'Bear_data',
+  'CWRU': BASE_PATH / 'data' / 'CWRU',
+  'BVD-TRSC': BASE_PATH / 'data' / 'BVD-TRSC',
+}
+
+DATASET_SPLIT_TYPE = {
+  'train.zip': 'train',
+  'test1.zip': 'test',
+  'test2.zip': 'test',
+}
 LABLES = {
   0: '正常状态',
   1: '内圈故障',
@@ -30,17 +43,10 @@ LABLES = {
 SEED = 114514
 
 
-def get_data_train() -> Tuple[ndarray, ndarray]:
-  data = np.load(DATA_PATH / 'train.npz')
-  return data['X'], data['Y']
-
-def get_data_test(split:str='test1') -> ndarray:
-  data = np.load(DATA_PATH / f'{split}.npz')
-  return data['X']
-
-def get_submit_pred_maybe(nlen:int) -> ndarray:
-  if SUBMIT_PATH.exists():
-    return np.loadtxt(SUBMIT_PATH, dtype=np.int32)
+def get_submit_pred_maybe(nlen:int, fp:Path=None) -> ndarray:
+  fp = fp or (LOG_PATH / 'submit.csv')
+  if fp.exists():
+    return np.loadtxt(fp, dtype=np.int32)
   else:
     return np.ones(nlen, dtype=np.int32) * 4
 

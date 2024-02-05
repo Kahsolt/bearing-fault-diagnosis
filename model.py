@@ -36,6 +36,8 @@ class NaiveConv1d(nn.Module):
 
 class Naive4Conv1d(nn.Module):
 
+  base_cls = NaiveConv1d
+
   def __init__(self, num_classes=4):
     super().__init__()
 
@@ -46,7 +48,7 @@ class Naive4Conv1d(nn.Module):
       nn.Linear(16, num_classes),
     )
 
-  def load_weights(self, state_dict:Dict[str, Tensor]):
+  def load_base_weights(self, state_dict:Dict[str, Tensor]):
     self.base.load_state_dict(state_dict)
     self.base.requires_grad_(False)
 

@@ -9,6 +9,7 @@ from sklearn.decomposition import PCA
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 
+from data import *
 from utils import *
 
 
@@ -30,8 +31,9 @@ def run(args):
   X1_pca = pca.transform(X1)
   preds = knn.predict(X1_pca)
 
-  print(f'>> writing {SUBMIT_PATH}...')
-  with open(SUBMIT_PATH, 'w', encoding='utf-8') as fh:
+  fp = LOG_PATH / 'submit_knn.csv'
+  print(f'>> writing {fp}...')
+  with open(fp, 'w', encoding='utf-8') as fh:
     for p in preds:
       fh.write(f'{p}\n')
 

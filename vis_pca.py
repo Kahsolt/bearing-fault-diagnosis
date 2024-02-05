@@ -14,6 +14,7 @@ from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
+from data import *
 from utils import *
 
 cmap = ListedColormap(

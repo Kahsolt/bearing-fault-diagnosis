@@ -10,30 +10,42 @@ from data import *
 from model import *
 from utils import *
 
-EPOCH = 50
-BATCH_SIZE = 20
-LR = 0.01
-
-MODELS = ['NaiveConv1d', 'Naive4Conv1d', 'SimpleConv1d', 'SimpleConv2d', 'MLP3d']
-DATASET_CLS = {
-  'NaiveConv1d': NaiveSignalDataset,
-  'Naive4Conv1d': NaiveSignal4Dataset,
-  'SimpleConv1d': SignalTrainDataset,
-  'SimpleConv2d': SpecTrainDataset,
-  'MLP3d': SignalPCATrainDataset,
-}
+MODELS = [
+  'NaiveConv1d',
+  'Naive4Conv1d',
+  'SimpleConv1d',
+  'SimpleConv2d',
+  'MLP3d',
+]
+DATASETS = [
+  'SignalDataset',
+  'SpecDataset',
+  'SignalPCADataset',
+  'DataCastleDataset',
+  'CWRUDataset',
+]
 
 
 def run(args):
-  model = globals()[args.model]()
-
-  model: Naive4Conv1d
-  state_dict = torch.load(LOG_PATH / 'NaiveConv1d.pth')
-  model.load_weights(state_dict)
-
+  ''' Model '''  
+  model: Model = globals()[args.model](args.n_class)
+  if hasattr(model, 'base_cls'):
+    print(f'>> load base model: {model.base_cls.__name__}')
+    state_dict = torch.load(LOG_PATH / f'{model.base_cls.__name__}.pth')
+    model.load_base_weights(state_dict)
   print(model)
   print('param_cnt:', sum([p.numel() for p in model.parameters() if p.requires_grad]))
 
+  ''' Data '''
+  dataset_cls = CWRUDataset
+  trainset = dataset_cls('train', transform=std_norm, n_class=args.n_class)
+  trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True, drop_last=True)
+  validset = dataset_cls('valid', transform=std_norm, n_class=args.n_class)
+  validloader = DataLoader(validset, batch_size=args.batch_size, shuffle=False, drop_last=False)
+  print('len(trainset):', len(trainset), 'len(trainloader):', len(trainloader))
+  print('len(validset):', len(validset), 'len(validloader):', len(validloader))
+
+  ''' Ckpt '''  
   fp = LOG_PATH / f'{args.model}.pth'
   if not 'from pretrained':
     try:
@@ -43,21 +55,15 @@ def run(args):
     except: pass
   model = model.to(device)
 
-  dataset_cls = DATASET_CLS[args.model]
-  trainset = dataset_cls('train', transform=minmax_norm)
-  trainloader = DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
-  validset = dataset_cls('valid', transform=minmax_norm)
-  validloader = DataLoader(validset, batch_size=BATCH_SIZE, shuffle=False, drop_last=False)
-  print('len(trainset):', len(trainset), 'len(trainloader):', len(trainloader))
-  print('len(validset):', len(validset), 'len(validloader):', len(validloader))
-
+  ''' Optim '''
   criterion = nn.CrossEntropyLoss()
-  optimizer = Adam(model.parameters(), lr=LR, weight_decay=5e-4)
-  #optimizer = SGD(model.parameters(), lr=LR, momentum=0.9)
+  optimizer = Adam(model.parameters(), lr=args.lr, weight_decay=5e-4)
 
+  ''' Train '''
   step = 0
   best_acc = 0
-  for epoch in range(EPOCH):
+  for epoch in range(args.epochs):
+    ok, tot = 0, 0
     model.train()
     for X, Y in trainloader:
       X = X.float().to(device)
@@ -69,13 +75,20 @@ def run(args):
       loss.backward()
       optimizer.step()
 
+      with torch.no_grad():
+        pred = logits.argmax(dim=-1)
+        ok += (pred == Y).sum().item()
+        tot += len(X)
+
       step += 1
 
       if step % 20 == 0:
-        print(f'>> [step {step}] loss: {loss.item()}')
+        print(f'>> [step {step}] loss: {loss.item()}, acc: {ok / tot:.3%}')
 
-    ok, tot = 0, 0
+    print(f'>> [Epoch: {epoch + 1}/{args.epochs}] train accuracy: {ok / tot:.3%}')
+
     with torch.inference_mode():
+      ok, tot = 0, 0
       model.eval()
       for X, Y in validloader:
         X = X.float().to(device)
@@ -87,7 +100,7 @@ def run(args):
         tot += len(X)
 
       acc = ok / tot
-      print(f'>> [Epoch: {epoch + 1}/{EPOCH}] accuracy: {acc:.3%}')
+      print(f'>> [Epoch: {epoch + 1}/{args.epochs}] valid accuracy: {acc:.3%}')
 
       if acc > best_acc:
         best_acc = acc
@@ -95,11 +108,13 @@ def run(args):
         torch.save(model.state_dict(), fp)
 
 
-def get_args():
-  parser = ArgumentParser()
-  parser.add_argument('-M', '--model', default='SimpleConv1d', choices=MODELS)
-  return parser.parse_args()
-
-
 if __name__ == '__main__':
-  run(get_args())
+  parser = ArgumentParser()
+  parser.add_argument('-M',  '--model',      default='NaiveConv1d',  choices=MODELS)
+  parser.add_argument('-NC', '--n_class',    default=4,    type=int, choices=[4, 10])
+  parser.add_argument('-E',  '--epochs',     default=20,   type=int)
+  parser.add_argument('-B',  '--batch_size', default=20,   type=int)
+  parser.add_argument('-lr', '--lr',         default=1e-3, type=eval)
+  args = parser.parse_args()
+
+  run(args)

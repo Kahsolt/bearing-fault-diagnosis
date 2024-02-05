@@ -8,6 +8,7 @@ import noisereduce as nr
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from data import *
 from utils import *
 
 sr = 1600
