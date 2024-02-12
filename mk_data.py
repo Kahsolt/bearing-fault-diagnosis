@@ -5,9 +5,11 @@
 import zipfile
 import pickle as pkl
 from numba import njit, jit
+from scipy.io.wavfile import write as save_wav
 
 from utils import *
 
+SAMPLE_RATE = 16000
 DATA_FILES = {
   'train.zip': 'train',
   'test1.zip': 'test',
@@ -160,8 +162,37 @@ def unsample_cache():
   print('>> Done!')
 
 
+def wavify_split(fp_in:Path, dp_out:Path):
+  split = fp_in.stem.split('_')[0]
+  with open(fp_in, 'rb') as fh:
+    unsampled: Unsampled = pkl.load(fh)
+  for cls, ls in unsampled.items():
+    for i, track in enumerate(ls):
+      if cls < 0:
+        fn = f'{split}-{i}.wav'
+      else:
+        fn = f'{split}_cls={cls}-{i}.wav'
+      fp = dp_out / fn
+      if fp.exists(): continue
+      save_wav(str(fp), SAMPLE_RATE, minmax_norm(track))
+
+
+def wavify_unsample():
+  for fn, split in DATA_FILES.items():
+    fp_in = (DATA_PATH / fn).with_name(f'{Path(fn).stem}_unsample.pkl')
+    if not fp_in.exists(): continue
+    dp_out = fp_in.with_suffix('')
+    dp_out.mkdir(exist_ok=True)
+    print(f'>> wavifying {fn}...')
+    wavify_split(fp_in, dp_out)
+
+  print('>> Done!')
+
+
 if __name__ == '__main__':
   print('[process_cache]')
   process_cache()
   print('[unsample_cache]')
   unsample_cache()
+  print('[wavify_unsample]')
+  wavify_unsample()
