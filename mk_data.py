@@ -9,6 +9,7 @@ from utils import *
 DATA_FILES = {
   'train.zip': 'train',
   'test1.zip': 'test',
+  'test2.zip': 'test',
 }
 
 

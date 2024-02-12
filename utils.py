@@ -8,6 +8,7 @@ from typing import *
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn import Module as Model
 from torch import Tensor
 import numpy as np
 from numpy import ndarray
@@ -21,6 +22,7 @@ DATA_PATH = BASE_PATH / 'data'
 LOG_PATH = BASE_PATH / 'log' ; LOG_PATH.mkdir(exist_ok=True)
 SUBMIT_PATH = LOG_PATH / 'submit.csv'
 
+SEED = 114514
 LABLES = {
   0: '正常状态',
   1: '内圈故障',

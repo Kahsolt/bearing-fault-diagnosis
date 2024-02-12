@@ -36,6 +36,8 @@ class NaiveConv1d(nn.Module):
 
 class Naive4Conv1d(nn.Module):
 
+  base_cls = NaiveConv1d
+
   def __init__(self, num_classes=4):
     super().__init__()
 

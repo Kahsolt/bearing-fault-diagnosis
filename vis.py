@@ -111,7 +111,7 @@ class App:
       self.X, self.Y = get_data_train()
     else:
       self.X = get_data_test(split)
-      self.Y = [0] * len(self.X)
+      self.Y = get_submit_pred_maybe(len(self.X))
     nlen = len(self.X)
     self.sc.config(to=nlen - 1)
 
