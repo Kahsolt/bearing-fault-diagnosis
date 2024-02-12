@@ -74,26 +74,6 @@ class SpecDataset(SignalDataset):
     return np.expand_dims(M, axis=0), Y
 
 
-class SignalPCADataset(SignalDataset):
-
-  def __init__(self, split:str='train', transform:Callable=None, n_class:int=4, ratio=0.3):
-    super().__init__(split, transform, n_class, ratio)
-
-    from sklearn.decomposition import PCA
-    fp = LOG_PATH / 'pca-train.pkl'
-    if self.is_train and not fp.exists():
-      pca = PCA(n_components=3)
-      pca.fit(self.X)
-      joblib.dump(pca, fp)
-    self.pca: PCA = joblib.load(fp)
-
-  def __getitem__(self, idx):
-    data = self.data[idx]
-    X, Y = sample_to_XY(data)
-    X_pca = self.pca.transform(np.expand_dims(X, axis=0)).squeeze(axis=0)
-    return X_pca, Y
-
-
 class NaiveSignalDataset(Dataset):
 
   n_reps = 10

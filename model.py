@@ -105,25 +105,6 @@ class SimpleConv2d(nn.Module):
     return self.fc(x)     # [B, NC]
 
 
-class MLP3d(nn.Module):
-
-  def __init__(self, num_classes=4):
-    super().__init__()
-
-    self.mlp = nn.Sequential(
-      nn.Linear(3, 128),
-      nn.Dropout(0.5),
-      nn.SiLU(inplace=True),
-      nn.Linear(128, 128),
-      nn.Dropout(0.5),
-      nn.SiLU(inplace=True),
-      nn.Linear(128, num_classes)
-    )
-
-  def forward(self, x:Tensor) -> Tensor:
-    return self.mlp(x)
-
-
 if __name__ == '__main__':
   #model = SimpleConv1d()
   #X = torch.randn(1, 1, 4096)

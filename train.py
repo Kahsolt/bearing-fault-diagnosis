@@ -15,12 +15,10 @@ MODELS = [
   'Naive4Conv1d',
   'SimpleConv1d',
   'SimpleConv2d',
-  'MLP3d',
 ]
 DATASETS = [
   'SignalDataset',
   'SpecDataset',
-  'SignalPCADataset',
   'NaiveSignalDataset',
 ]
 
