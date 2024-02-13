@@ -16,7 +16,7 @@ def run(args):
 
   ''' Data '''
   dataset_cls = globals()[args.dataset]
-  testset = dataset_cls(args.split, transform=minmax_norm, n_class=4)
+  testset = dataset_cls(args.split, transform=wav_norm, n_class=4)
   testloader = DataLoader(testset, batch_size=1, shuffle=False)
   print('len(testset):', len(testset), 'len(testloader):', len(testloader))
 

@@ -49,18 +49,13 @@ def get_submit_pred_maybe(nlen:int, fp:Path=None) -> ndarray:
     return np.ones(nlen, dtype=np.int32) * 4
 
 
-def minmax_norm(X:ndarray) -> ndarray:
+def wav_norm(X:ndarray) -> ndarray:
   X_min = X.min(axis=-1, keepdims=True)
   X_max = X.max(axis=-1, keepdims=True)
   X = (X - X_min) / (X_max - X_min)
-  X -= 0.5
-  return X
-
-def std_norm(X:ndarray) -> ndarray:
-  X_avg = X.mean(axis=-1, keepdims=True)
-  X_std = X.std (axis=-1, keepdims=True)
-  X = (X - X_avg) / X_std
-  return X
+  X -= 0.5    # [-0.5, 0.5]
+  X -= X.mean(axis=-1, keepdims=True)   # remove DC offset
+  return X    # ~[-0.5, 0.5]
 
 
 def get_spec(y:ndarray, n_fft:int=256, hop_len:int=16, win_len:int=64) -> ndarray:

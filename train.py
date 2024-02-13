@@ -35,9 +35,9 @@ def run(args):
 
   ''' Data '''
   dataset_cls = globals()[args.dataset]
-  trainset = dataset_cls('train', transform=minmax_norm, n_class=args.n_class)
+  trainset = dataset_cls('train', transform=wav_norm, n_class=args.n_class)
   trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True, drop_last=True, pin_memory=True)
-  validset = dataset_cls('valid', transform=minmax_norm, n_class=args.n_class)
+  validset = dataset_cls('valid', transform=wav_norm, n_class=args.n_class)
   validloader = DataLoader(validset, batch_size=args.batch_size, shuffle=False, drop_last=False, pin_memory=True)
   print('len(trainset):', len(trainset), 'len(trainloader):', len(trainloader))
   print('len(validset):', len(validset), 'len(validloader):', len(validloader))

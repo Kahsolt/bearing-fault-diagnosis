@@ -12,7 +12,7 @@ def run(args):
   print('Y.shape:', Y.shape)
   print('lables:', Counter(Y))
 
-  X = minmax_norm(X)
+  X = wav_norm(X)
   plot(pca(X), Y, title='pca(wav)')
 
 

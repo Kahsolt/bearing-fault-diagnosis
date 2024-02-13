@@ -120,9 +120,9 @@ def extract_segmented_features(data:ndarray, segment_size:int=256, overlap:int=1
 
 def run():
   X_test = get_data_test('test1')
-  X_test = minmax_norm(X_test)
+  X_test = wav_norm(X_test)
   X_train, label = get_data_train()
-  X_train = minmax_norm(X_train)
+  X_train = wav_norm(X_train)
   print('X_test.shape:', X_test.shape)
   print('X_train.shape:', X_train.shape)
   print('Y.shape:', label.shape)

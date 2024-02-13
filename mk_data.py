@@ -158,7 +158,7 @@ def wavify_train(fp_in:Path):
     for i, x in enumerate(ls):
       fp = dp_out / f'{split}_cls={cls}-{i}.wav'
       if fp.exists(): continue
-      save_wav(str(fp), SAMPLE_RATE, minmax_norm(x))
+      save_wav(str(fp), SAMPLE_RATE, wav_norm(x))
 
 
 def wavify_test(fp_in:Path):
@@ -170,7 +170,7 @@ def wavify_test(fp_in:Path):
   for i, x in enumerate(X):
     fp = dp_out / f'{split}-{i}.wav'
     if fp.exists(): continue
-    save_wav(str(fp), SAMPLE_RATE, minmax_norm(x))
+    save_wav(str(fp), SAMPLE_RATE, wav_norm(x))
 
 
 def wavify():

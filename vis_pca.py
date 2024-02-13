@@ -72,7 +72,7 @@ def get_XY(args):
     from noisereduce import reduce_noise
     X = np.stack([reduce_noise(x, sr=sr, n_fft=n_fft, hop_length=hop_len, win_length=win_len) for x in tqdm(X)], axis=0)
 
-  X = minmax_norm(X)
+  X = wav_norm(X)
   return X, Y
 
 
