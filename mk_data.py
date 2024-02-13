@@ -2,14 +2,14 @@
 # Author: Armit
 # Create Time: 2024/02/01
 
-import zipfile
 import pickle as pkl
+from zipfile import ZipFile
 from numba import njit, jit
 from scipy.io.wavfile import write as save_wav
 
 from utils import *
 
-SAMPLE_RATE = 16000
+SAMPLE_RATE = 16000   # this is a guess
 DATA_FILES = {
   'train.zip': 'train',
   'test1.zip': 'test',
@@ -22,7 +22,7 @@ Unsampled = Dict[int, List[ndarray]]  # cls => tracks
 
 def process_train(fp_in:Path) -> Processed:
   X, Y = [], []
-  zf = zipfile.ZipFile(fp_in)
+  zf = ZipFile(fp_in)
   for zinfo in tqdm(zf.infolist()):
     if zinfo.is_dir(): continue
     label = int(Path(zinfo.filename).parent.name)
@@ -37,7 +37,7 @@ def process_train(fp_in:Path) -> Processed:
 
 def process_test(fp_in:Path) -> Processed:
   X = []
-  zf = zipfile.ZipFile(fp_in)
+  zf = ZipFile(fp_in)
   zinfos = zf.infolist()    # NOTE: 保持有序！
   zinfos.sort(key=lambda zinfo: int(Path(zinfo.filename).stem))
   for zinfo in tqdm(zinfos):
@@ -50,21 +50,19 @@ def process_test(fp_in:Path) -> Processed:
 
 
 def process_cache():
-  for fn, split in DATA_FILES.items():
+  for fn, kind in DATA_FILES.items():
     fp_in = DATA_PATH / fn
     if not fp_in.exists(): continue
     fp_out = fp_in.with_suffix('.npz')
     if fp_out.exists():
-      print(f'>> ignore {fp_out.name} due to file exists')
+      print(f'>> ignore due to file exists: {fp_out.name}')
       continue
 
     print(f'>> processing {fn}...')
-    data: Processed = globals()[f'process_{split}'](fp_in)
+    data: Processed = globals()[f'process_{kind}'](fp_in)
     for k, v in data.items():
       print(f'{k}.shape:', v.shape)
     np.savez_compressed(fp_out, **data)
-
-  print('>> Done!')
 
 
 @njit
@@ -94,11 +92,7 @@ def try_merge(x:ndarray, y:ndarray, min_overlap:int=32) -> Optional[ndarray]:
     if allclose(x[i:], y[:xlen - i]):
       return np.concatenate((x[:i], y))
 
-@njit
-def cmp(x:ndarray) -> int:
-  return len(x)
 
-@jit
 def merge_pool(pool:List[ndarray]) -> List[ndarray]:
   print(f'[merge_pool] size: {len(pool)}')
   n_iter = 0
@@ -120,79 +114,81 @@ def merge_pool(pool:List[ndarray]) -> List[ndarray]:
     print(f'>> n_iter: {n_iter}, n_merged: {len(merged)}, n_pool: {len(pool) - len(merged)}')
     if not merged: break
     pool = merged + [pool[i] for i, v in enumerate(flag) if not v]
-  pool.sort(key=cmp, reverse=True)
+  pool.sort(key=(lambda x: len(x)), reverse=True)
   return pool
 
 
-def unsample_split(fp_in:Path) -> Unsampled:
-  data = np.load(fp_in)
-  if 'Y' in data:
-    X, Y = data['X'], data['Y']
-  else:
-    X = data['X']
-    Y = [-1] * len(X)
-  unsampled: Unsampled = {}
-  for x, y in zip(X, Y):
-    if y not in unsampled: unsampled[y] = []
-    unsampled[y].append(x)
-  for k, pool in unsampled.items():
-    unsampled[k] = merge_pool(pool)
-  return unsampled
-
-
-def unsample_cache():
-  for fn, split in DATA_FILES.items():
-    fp_in = (DATA_PATH / fn).with_suffix('.npz')
+def unsample():
+  for fn, kind in DATA_FILES.items():
+    if kind != 'train': continue    # only unsample "train" split
+    fp_raw = DATA_PATH / fn
+    fp_in = fp_raw.with_suffix('.npz')
     if not fp_in.exists(): continue
     fp_out = fp_in.with_name(f'{fp_in.stem}_unsample.pkl')
     if fp_out.exists():
-      print(f'>> ignore {fp_out.name} due to file exists')
+      print(f'>> ignore due to file exists: {fp_out.name}')
       continue
 
-    print(f'>> unsampling {fn}...')
-    data = unsample_split(fp_in)
-    for k, v in data.items():
+    print(f'>> unsampling {fp_in}...')
+    data = np.load(fp_in)
+    X, Y = data['X'], data['Y']
+    unsampled: Unsampled = {}
+    for x, y in zip(X, Y):
+      if y not in unsampled:
+        unsampled[y] = []
+      unsampled[y].append(x)
+    for k, pool in unsampled.items():
+      unsampled[k] = merge_pool(pool)
+    for k, v in unsampled.items():
       print(f'[class-{k}]', end=' ')
       for x in v:
         print(len(x), end=', ')
       print()
     with open(fp_out, 'wb') as fh:
-      pkl.dump(data, fh)
-
-  print('>> Done!')
+      pkl.dump(unsampled, fh)
 
 
-def wavify_split(fp_in:Path, dp_out:Path):
+def wavify_train(fp_in:Path):
   split = fp_in.stem.split('_')[0]
+  dp_out = fp_in.with_name(f'{split}.wav')
+  dp_out.mkdir(exist_ok=True)
   with open(fp_in, 'rb') as fh:
     unsampled: Unsampled = pkl.load(fh)
   for cls, ls in unsampled.items():
-    for i, track in enumerate(ls):
-      if cls < 0:
-        fn = f'{split}-{i}.wav'
-      else:
-        fn = f'{split}_cls={cls}-{i}.wav'
-      fp = dp_out / fn
+    for i, x in enumerate(ls):
+      fp = dp_out / f'{split}_cls={cls}-{i}.wav'
       if fp.exists(): continue
-      save_wav(str(fp), SAMPLE_RATE, minmax_norm(track))
+      save_wav(str(fp), SAMPLE_RATE, minmax_norm(x))
 
 
-def wavify_unsample():
-  for fn, split in DATA_FILES.items():
-    fp_in = (DATA_PATH / fn).with_name(f'{Path(fn).stem}_unsample.pkl')
+def wavify_test(fp_in:Path):
+  split = fp_in.stem.split('_')[0]
+  dp_out = fp_in.with_name(f'{split}.wav')
+  dp_out.mkdir(exist_ok=True)
+  data = np.load(fp_in)
+  X = data['X']
+  for i, x in enumerate(X):
+    fp = dp_out / f'{split}-{i}.wav'
+    if fp.exists(): continue
+    save_wav(str(fp), SAMPLE_RATE, minmax_norm(x))
+
+
+def wavify():
+  for fn, kind in DATA_FILES.items():
+    fp_raw = DATA_PATH / fn 
+    if kind == 'train':
+      fp_in = fp_raw.with_name(f'{fp_raw.stem}_unsample.pkl')
+    else:
+      fp_in = fp_raw.with_name(f'{fp_raw.stem}.npz')
     if not fp_in.exists(): continue
-    dp_out = fp_in.with_suffix('')
-    dp_out.mkdir(exist_ok=True)
-    print(f'>> wavifying {fn}...')
-    wavify_split(fp_in, dp_out)
-
-  print('>> Done!')
+    print(f'>> wavifying {fp_in.name}...')
+    globals()[f'wavify_{kind}'](fp_in)
 
 
 if __name__ == '__main__':
   print('[process_cache]')
   process_cache()
-  print('[unsample_cache]')
-  unsample_cache()
-  print('[wavify_unsample]')
-  wavify_unsample()
+  print('[unsample]')
+  unsample()
+  print('[wavify]')
+  wavify()
