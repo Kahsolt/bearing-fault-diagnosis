@@ -170,7 +170,8 @@ def wavify_test(fp_in:Path):
   for i, x in enumerate(X):
     fp = dp_out / f'{split}-{i}.wav'
     if fp.exists(): continue
-    save_wav(str(fp), SAMPLE_RATE, wav_norm(x))
+    x_exp = np.concatenate([x] * 10, axis=0)
+    save_wav(str(fp), SAMPLE_RATE, wav_norm(x_exp))
 
 
 def wavify():

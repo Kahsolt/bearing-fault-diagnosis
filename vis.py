@@ -114,7 +114,7 @@ class App:
       self.X, self.Y = get_data_train()
     else:
       self.X = get_data_test(split)
-      self.Y = get_submit_pred_maybe(len(self.X))
+      self.Y = get_submit_pred_maybe(len(self.X), args.fp)
     nlen = len(self.X)
     self.sc.config(to=nlen - 1)
 
@@ -160,7 +160,7 @@ class App:
       self.axs: List[Axes]
       ax0, ax1, ax2, ax3 = self.axs
       if idx_changed:
-        ax0.cla() ; ax0.plot(x, c=COLOR_MAP[y])
+        ax0.cla() ; ax0.plot(x, c=COLOR_MAP[y] if y >= 0 else 'purple')
       ax1.cla() ; ax1.plot(c0, label='rms') ; ax1.plot(zcr, label='zcr') ; ax1.legend(loc='upper right')
       ax2.cla() ; sns.heatmap(M, ax=ax2, cbar=False) ; ax2.invert_yaxis()
       ax3.cla() ; ax3.plot(fft_data)
@@ -175,6 +175,7 @@ class App:
 
 if __name__ == '__main__':
   parser = ArgumentParser()
+  parser.add_argument('--fp', type=Path, help='submit file')
   parser.add_argument('-nr', action='store_true', help='enable noise reduction')
   parser.add_argument('-bf', action='store_true', help='enable bandwith filter')
   args = parser.parse_args()

@@ -23,7 +23,6 @@ DATA_PATH = BASE_PATH / 'data'
 LOG_PATH = BASE_PATH / 'log' ; LOG_PATH.mkdir(exist_ok=True)
 SUBMIT_PATH = LOG_PATH / 'submit.csv'
 
-SEED = 114514
 LABLES = {
   0: '正常状态',
   1: '内圈故障',
