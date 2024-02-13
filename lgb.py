@@ -118,6 +118,14 @@ def extract_segmented_features(data:ndarray, segment_size:int=256, overlap:int=1
   return feat_df
 
 
+def extract_fft_features(data:ndarray) -> DataFrame:
+  fft_magnitude = np.abs(fft(data, axis=-1))
+  feat_df = pd.DataFrame(fft_magnitude)
+  print('feat_df.shape:', feat_df.shape)
+  feat_df.columns = [f'fft_{i+1}' for i in range(feat_df.shape[-1])]
+  return feat_df
+
+
 def run():
   X_test = get_data_test('test1')
   X_test = wav_norm(X_test)
@@ -127,8 +135,8 @@ def run():
   print('X_train.shape:', X_train.shape)
   print('Y.shape:', label.shape)
 
-  df_test  = extract_segmented_features(X_test)
-  df_train = extract_segmented_features(X_train)
+  df_test  = extract_fft_features(X_test)
+  df_train = extract_fft_features(X_train)
   df_train['label'] = label
   feats = list(df_test.columns)
   print('df_test.shape:', df_test.shape)
@@ -142,6 +150,7 @@ def run():
   df_submit = pd.DataFrame()
   df_submit['label'] = np.argmax(pred_y, axis=1)
   fp = LOG_PATH / f'lgb_{acc:.4f}.csv'
+  print(f'>> save to {fp}')
   df_submit.to_csv(fp, header=None, index=False)
 
 
