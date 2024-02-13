@@ -41,9 +41,10 @@ def get_data_test(split:str='test1') -> ndarray:
   data = np.load(DATA_PATH / f'{split}.npz')
   return data['X']
 
-def get_submit_pred_maybe(nlen:int) -> ndarray:
-  if SUBMIT_PATH.exists():
-    return np.loadtxt(SUBMIT_PATH, dtype=np.int32)
+def get_submit_pred_maybe(nlen:int, fp:Path=None) -> ndarray:
+  fp = fp or SUBMIT_PATH
+  if fp.exists():
+    return np.loadtxt(fp, dtype=np.int32)
   else:
     return np.ones(nlen, dtype=np.int32) * 4
 
