@@ -5,6 +5,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.messagebox as tkmsg
+from argparse import ArgumentParser
 from traceback import print_exc, format_exc
 
 from scipy.fftpack import fft
@@ -22,7 +23,8 @@ HOP_LEN_LIST = [e//2 for e in N_FFT_LIST]   # 4~1024
 WIN_LEN_LIST = [e//2 for e in N_FFT_LIST]   # 4~1024
 
 # defaults
-SPLIT = 'train'
+SPLIT   = 'train'
+SR      = 1600
 N_FFT   = 256
 HOP_LEN = 16
 WIN_LEN = 64
@@ -30,7 +32,8 @@ WIN_LEN = 64
 
 class App:
 
-  def __init__(self):
+  def __init__(self, args):
+    self.args = args
     self.X, self.Y = None, None
     self.cur_idx = None
 
@@ -99,7 +102,7 @@ class App:
     frm2 = ttk.Frame(wnd)
     frm2.pack(side=tk.BOTTOM, expand=tk.YES, fill=tk.BOTH)
     if True:
-      fig, axs = plt.subplots(4, 1)
+      fig, axs = plt.subplots(4, 1, figsize=(8, 6))
       fig.tight_layout()
       cvs = FigureCanvasTkAgg(fig, frm2)
       cvs.get_tk_widget().pack(expand=tk.YES, fill=tk.BOTH)
@@ -135,10 +138,20 @@ class App:
       hop_len = n_fft
 
     try:
-      x = self.X[idx]
-      y = self.Y[idx]
-      D = L.stft(x, n_fft=n_fft, hop_length=hop_len, win_length=win_len)
-      M = np.clip(np.log(np.abs(D) + 1e-15), a_min=1e-5, a_max=None)
+      x, y = self.X[idx], self.Y[idx]
+      if self.args.nr:
+        from noisereduce import reduce_noise
+        x = reduce_noise(x, sr=SR, n_fft=n_fft, hop_length=hop_len, win_length=win_len)
+      if self.args.bf:
+        D = L.stft(x, n_fft=n_fft, hop_length=hop_len, win_length=win_len)
+        M = np.clip(np.log(np.abs(D) + 1e-15), a_min=1e-5, a_max=None)    # [F, L]
+        M_hat = np.ones_like(M) * 1e-5
+        M_hat[10:24, :] = M[10:24, :]   # TODO
+        P = np.angle(D)
+        D_hat = np.exp(M_hat) * np.exp(1j*P)
+        y = L.istft(D_hat, n_fft=n_fft, hop_length=hop_len, win_length=win_len, length=len(x))
+
+      M = get_spec(x, n_fft, hop_len, win_len)
       c0 = L.feature.rms(y=x, frame_length=n_fft, hop_length=hop_len, pad_mode='reflect')[0]
       zcr = L.feature.zero_crossing_rate(x, frame_length=n_fft, hop_length=hop_len)[0]
       fft_data = np.abs(fft(np.expand_dims(x, axis=0), axis=1).squeeze(0))
@@ -161,4 +174,9 @@ class App:
 
 
 if __name__ == '__main__':
-  App()
+  parser = ArgumentParser()
+  parser.add_argument('-nr', action='store_true', help='enable noise reduction')
+  parser.add_argument('-bf', action='store_true', help='enable bandwith filter')
+  args = parser.parse_args()
+
+  App(args)
