@@ -17,14 +17,13 @@ import seaborn as sns
 from utils import *
 
 COLOR_MAP = ['grey', 'r', 'g', 'b']
-SPLITS = ['train', 'test1']
+SPLITS = ['train', 'test1', 'test2']
 N_FFT_LIST = [2**i for i in range(3, 12)]   # 8~2048
 HOP_LEN_LIST = [e//2 for e in N_FFT_LIST]   # 4~1024
 WIN_LEN_LIST = [e//2 for e in N_FFT_LIST]   # 4~1024
 
 # defaults
 SPLIT   = 'train'
-SR      = 1600
 N_FFT   = 256
 HOP_LEN = 16
 WIN_LEN = 64
@@ -141,7 +140,7 @@ class App:
       x, y = self.X[idx], self.Y[idx]
       if self.args.nr:
         from noisereduce import reduce_noise
-        x = reduce_noise(x, sr=SR, n_fft=n_fft, hop_length=hop_len, win_length=win_len)
+        x = reduce_noise(x, sr=SAMPLE_RATE, n_fft=n_fft, hop_length=hop_len, win_length=win_len)
       if self.args.bf:
         D = L.stft(x, n_fft=n_fft, hop_length=hop_len, win_length=win_len)
         M = np.clip(np.log(np.abs(D) + 1e-15), a_min=1e-5, a_max=None)    # [F, L]

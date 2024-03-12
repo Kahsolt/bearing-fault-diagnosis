@@ -107,7 +107,7 @@ def run(args):
 
 if __name__ == '__main__':
   parser = ArgumentParser()
-  parser.add_argument('--split', default='train', choices=['all', 'train', 'test1'])
+  parser.add_argument('--split', default='train', choices=['all', 'train', 'test1', 'test2'])
   parser.add_argument('--nr', action='store_true')
   args = parser.parse_args()
 

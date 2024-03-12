@@ -23,6 +23,7 @@ DATA_PATH = BASE_PATH / 'data'
 LOG_PATH = BASE_PATH / 'log' ; LOG_PATH.mkdir(exist_ok=True)
 SUBMIT_PATH = LOG_PATH / 'submit.csv'
 
+SAMPLE_RATE = 51200
 LABLES = {
   0: '正常状态',
   1: '内圈故障',
@@ -45,7 +46,7 @@ def get_submit_pred_maybe(nlen:int, fp:Path=None) -> ndarray:
   if fp.exists():
     return np.loadtxt(fp, dtype=np.int32)
   else:
-    return np.ones(nlen, dtype=np.int32) * 4
+    return np.ones(nlen, dtype=np.int32) * -1
 
 
 def wav_norm(X:ndarray) -> ndarray:

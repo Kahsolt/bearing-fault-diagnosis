@@ -9,7 +9,6 @@ from scipy.io.wavfile import write as save_wav
 
 from utils import *
 
-SAMPLE_RATE = 16000   # this is a guess
 DATA_FILES = {
   'train.zip': 'train',
   'test1.zip': 'test',
