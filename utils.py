@@ -11,11 +11,11 @@ from numpy import ndarray
 import librosa as L
 import librosa.display as LD
 from tqdm import tqdm
-from noisereduce import reduce_noise
 
 BASE_PATH = Path(__file__).parent.relative_to(Path.cwd())
 DATA_PATH = BASE_PATH / 'data'
 LOG_PATH = BASE_PATH / 'log' ; LOG_PATH.mkdir(exist_ok=True)
+IMG_PATH = BASE_PATH / 'img' ; IMG_PATH.mkdir(exist_ok=True)
 SUBMIT_PATH = LOG_PATH / 'submit.csv'
 
 SAMPLE_RATE = 51200
@@ -43,11 +43,10 @@ def get_data_test(split:str='test1') -> ndarray:
   return data['X']
 
 def get_submit_pred_maybe(nlen:int, fp:Path=None) -> ndarray:
-  fp = fp or SUBMIT_PATH
-  if fp.exists():
+  if fp and fp.exists():
     return np.loadtxt(fp, dtype=np.int32)
   else:
-    return np.ones(nlen, dtype=np.int32) * -1
+    return np.ones(nlen, dtype=np.int32) * len(LABLES)
 
 
 def make_split(X:ndarray, Y:ndarray, split:str='train', ratio:float=0.3) -> List[Tuple[ndarray, int]]:

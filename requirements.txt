@@ -1,7 +1,9 @@
 numpy
 numba
 scipy
-librosa==0.9.2
+scikit-learn
+scikit-learn-intelex
+librosa
 noisereduce
 matplotlib
 seaborn

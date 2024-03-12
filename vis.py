@@ -9,6 +9,7 @@ from argparse import ArgumentParser
 from traceback import print_exc, format_exc
 
 from scipy.fftpack import fft
+from noisereduce import reduce_noise
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -164,7 +165,7 @@ class App:
       x, y = self.X[idx], self.Y[idx]
       x = x[tstart:tend]
       try: x = reduce_noise(x, sr=pseudo_sr, n_fft=n_fft, hop_length=hop_len, win_length=win_len)
-      except: pass
+      except Exception as e: print(e)
       M = get_spec(x, n_fft, hop_len, win_len)
       c0 = L.feature.rms(y=x, frame_length=n_fft, hop_length=hop_len, pad_mode='reflect')[0]
       zcr = L.feature.zero_crossing_rate(x, frame_length=n_fft, hop_length=hop_len)[0]
@@ -173,7 +174,7 @@ class App:
 
       self.axs: List[Axes]
       ax0, ax1, ax2, ax3 = self.axs
-      ax0.cla() ; ax0.plot(x, c=COLOR_MAP[y] if y >= 0 else 'purple')
+      ax0.cla() ; ax0.plot(x, c=COLOR_MAP[y] if y < len(COLOR_MAP) else 'purple')
       ax1.cla() ; ax1.plot(c0, label='rms') ; ax1.plot(zcr, label='zcr') ; ax1.legend(loc='upper right')
       ax2.cla() ; sns.heatmap(M, ax=ax2, cbar=False) ; ax2.invert_yaxis()
       ax3.cla() ; ax3.plot(fft_data)

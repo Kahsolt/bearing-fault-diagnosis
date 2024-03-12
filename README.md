@@ -11,13 +11,11 @@ Team Name: ⚪滚滚
 
 ### Quickstart
 
-⚪ install
-
 - `pip install -r requirements.txt`
-
-⚪ run
-
-- ???
+- `python mk_data.py`
+  - put all datasets at `data\*.zip`
+- `python run.py`
+- `python vis_pca.py --split test2 --fp log\submit.csv`
 
 
 #### refenrence
