@@ -16,11 +16,6 @@ from matplotlib.colors import ListedColormap
 
 from utils import *
 
-sr = 1600
-n_fft = 1024     # 512
-hop_len = 512    # 16
-win_len = 1024   # 64
-
 CMAP_4 = ListedColormap(
   # 正常状态, 内圈故障, 外圈故障, 滚动体故障
   colors=['grey', 'r', 'g', 'b']
@@ -57,20 +52,21 @@ def get_XY(args):
     X1, Y1 = get_data_train()
     X2 = get_data_test('test1')
     Y2 = get_submit_pred_maybe(len(X2))
-    X = np.concatenate([X1, X2], axis=0)
-    Y = np.concatenate([Y1, Y2], axis=0)
+    X3 = get_data_test('test2')
+    Y3 = get_submit_pred_maybe(len(X3))
+    X = np.concatenate([X1, X2, X3], axis=0)
+    Y = np.concatenate([Y1, Y2, Y3], axis=0)
   elif args.split == 'train':
     X, Y = get_data_train()
   else:
     X = get_data_test(args.split)
-    Y = get_submit_pred_maybe(len(X))
+    Y = get_submit_pred_maybe(len(X), args.fp)
   print('X.shape:', X.shape)
   print('Y.shape:', Y.shape)
   print('lables:', Counter(Y))
 
   if args.nr:
-    from noisereduce import reduce_noise
-    X = np.stack([reduce_noise(x, sr=sr, n_fft=n_fft, hop_length=hop_len, win_length=win_len) for x in tqdm(X)], axis=0)
+    X = np.stack([reduce_noise(x, sr=SAMPLE_RATE_NR, n_fft=N_FFT, hop_length=HOP_LEN, win_length=WIN_LEN) for x in tqdm(X)], axis=0)
 
   X = wav_norm(X)
   return X, Y
@@ -79,7 +75,7 @@ def get_XY(args):
 def wav_to_spec(X:ndarray, Y:ndarray, n_sample:int=10000) -> Tuple[ndarray, ndarray]:
   X_spec, Y_spec = [], []
   for x, y in zip(X, Y):
-    frames = get_spec(x, n_fft, hop_len, win_len)
+    frames = get_spec(x, N_FFT, HOP_LEN, WIN_LEN)
     X_spec.append(frames)
     Y_spec.extend([y] * len(frames))
   X_spec = np.concatenate(X_spec, axis=0)
@@ -99,16 +95,18 @@ def run(args):
   X, Y = get_XY(args)
   plot(pca(X), Y, title='pca(wav)')
 
-  X_s, Y_s = wav_to_spec(X, Y, 10000)
-  X_s_pca = pca(X_s)
-  plot(X_s_pca, Y_s, title='pca(spec)')
-  plot(X_s_pca, kmeans(X_s), title='kmeans on pca(spec)')
+  if False:
+    X_s, Y_s = wav_to_spec(X, Y, 10000)
+    X_s_pca = pca(X_s)
+    plot(X_s_pca, Y_s, title='pca(spec)')
+    plot(X_s_pca, kmeans(X_s), title='kmeans on pca(spec)')
 
 
 if __name__ == '__main__':
   parser = ArgumentParser()
   parser.add_argument('--split', default='train', choices=['all', 'train', 'test1', 'test2'])
-  parser.add_argument('--nr', action='store_true')
+  parser.add_argument('--fp', default=SUBMIT_PATH, type=Path)
+  parser.add_argument('-nr', '--nr', action='store_true', help='enable noise reduction')
   args = parser.parse_args()
 
   run(args)

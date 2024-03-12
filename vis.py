@@ -61,13 +61,13 @@ class App:
     self.var_n_fft   = tk.IntVar(wnd, value=N_FFT)
     self.var_hop_len = tk.IntVar(wnd, value=HOP_LEN)
     self.var_win_len = tk.IntVar(wnd, value=WIN_LEN)
+    self.var_pseudo_sr = tk.IntVar(wnd, value=SAMPLE_RATE_NR)
 
     # top: query
-    frm1 = ttk.Label(wnd)
+    frm1 = ttk.Frame(wnd)
     frm1.pack(side=tk.TOP, anchor=tk.N, expand=tk.YES, fill=tk.X)
     if True:
-
-      frm11 = ttk.Label(frm1)
+      frm11 = ttk.Frame(frm1)
       frm11.pack(expand=tk.YES, fill=tk.X)
       if True:
         tk.Label(frm11, text='Dataset').pack(side=tk.LEFT, expand=tk.NO)
@@ -90,10 +90,17 @@ class App:
         cb.bind('<<ComboboxSelected>>', lambda evt: self.redraw())
         cb.pack(side=tk.LEFT)
 
-      frm12 = ttk.Label(frm1)
+      frm12 = ttk.LabelFrame(frm1, text='Pseudo Sample Rate for NR')
       frm12.pack(expand=tk.YES, fill=tk.X)
       if True:
-        sc = tk.Scale(frm12, command=lambda _: self.redraw(), variable=self.var_idx, orient=tk.HORIZONTAL, from_=0, to=1000, tickinterval=500, resolution=1)
+        sc = tk.Scale(frm12, command=lambda _: self.redraw(), variable=self.var_pseudo_sr, orient=tk.HORIZONTAL, from_=320, to=4096, tickinterval=256, resolution=1)
+        sc.pack(expand=tk.YES, fill=tk.X)
+        self.sc = sc
+
+      frm13 = ttk.LabelFrame(frm1, text='Sample Index')
+      frm13.pack(expand=tk.YES, fill=tk.X)
+      if True:
+        sc = tk.Scale(frm13, command=lambda _: self.redraw(), variable=self.var_idx, orient=tk.HORIZONTAL, from_=0, to=1000, tickinterval=500, resolution=1)
         sc.pack(expand=tk.YES, fill=tk.X)
         self.sc = sc
 
@@ -126,8 +133,7 @@ class App:
     n_fft   = self.var_n_fft  .get()
     hop_len = self.var_hop_len.get()
     win_len = self.var_win_len.get()
-
-    idx_changed = self.cur_idx != idx
+    pseudo_sr = self.var_pseudo_sr.get()
 
     if win_len >= n_fft:
       self.var_win_len.set(n_fft)
@@ -138,18 +144,8 @@ class App:
 
     try:
       x, y = self.X[idx], self.Y[idx]
-      if self.args.nr:
-        from noisereduce import reduce_noise
-        x = reduce_noise(x, sr=SAMPLE_RATE, n_fft=n_fft, hop_length=hop_len, win_length=win_len)
-      if self.args.bf:
-        D = L.stft(x, n_fft=n_fft, hop_length=hop_len, win_length=win_len)
-        M = np.clip(np.log(np.abs(D) + 1e-15), a_min=1e-5, a_max=None)    # [F, L]
-        M_hat = np.ones_like(M) * 1e-5
-        M_hat[10:24, :] = M[10:24, :]   # TODO
-        P = np.angle(D)
-        D_hat = np.exp(M_hat) * np.exp(1j*P)
-        y = L.istft(D_hat, n_fft=n_fft, hop_length=hop_len, win_length=win_len, length=len(x))
-
+      try: x = reduce_noise(x, sr=pseudo_sr, n_fft=n_fft, hop_length=hop_len, win_length=win_len)
+      except: pass
       M = get_spec(x, n_fft, hop_len, win_len)
       c0 = L.feature.rms(y=x, frame_length=n_fft, hop_length=hop_len, pad_mode='reflect')[0]
       zcr = L.feature.zero_crossing_rate(x, frame_length=n_fft, hop_length=hop_len)[0]
@@ -158,8 +154,7 @@ class App:
 
       self.axs: List[Axes]
       ax0, ax1, ax2, ax3 = self.axs
-      if idx_changed:
-        ax0.cla() ; ax0.plot(x, c=COLOR_MAP[y] if y >= 0 else 'purple')
+      ax0.cla() ; ax0.plot(x, c=COLOR_MAP[y] if y >= 0 else 'purple')
       ax1.cla() ; ax1.plot(c0, label='rms') ; ax1.plot(zcr, label='zcr') ; ax1.legend(loc='upper right')
       ax2.cla() ; sns.heatmap(M, ax=ax2, cbar=False) ; ax2.invert_yaxis()
       ax3.cla() ; ax3.plot(fft_data)
@@ -175,8 +170,6 @@ class App:
 if __name__ == '__main__':
   parser = ArgumentParser()
   parser.add_argument('--fp', type=Path, help='submit file')
-  parser.add_argument('-nr', action='store_true', help='enable noise reduction')
-  parser.add_argument('-bf', action='store_true', help='enable bandwith filter')
   args = parser.parse_args()
 
   App(args)

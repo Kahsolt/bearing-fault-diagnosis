@@ -11,6 +11,7 @@ from numpy import ndarray
 import librosa as L
 import librosa.display as LD
 from tqdm import tqdm
+from noisereduce import reduce_noise
 
 BASE_PATH = Path(__file__).parent.relative_to(Path.cwd())
 DATA_PATH = BASE_PATH / 'data'
@@ -18,6 +19,10 @@ LOG_PATH = BASE_PATH / 'log' ; LOG_PATH.mkdir(exist_ok=True)
 SUBMIT_PATH = LOG_PATH / 'submit.csv'
 
 SAMPLE_RATE = 51200
+SAMPLE_RATE_NR = 1600    # pseudo sr for noisereduce
+N_FFT = 1024     # 512
+HOP_LEN = 512    # 16
+WIN_LEN = 1024   # 64
 LABLES = {
   0: '正常状态',
   1: '内圈故障',
