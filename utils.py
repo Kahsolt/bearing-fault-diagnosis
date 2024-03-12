@@ -2,21 +2,15 @@
 # Author: Armit
 # Create Time: 2024/02/01
 
+import random
 from pathlib import Path
 from typing import *
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.nn import Module as Model
-from torch import Tensor
 import numpy as np
 from numpy import ndarray
 import librosa as L
 import librosa.display as LD
 from tqdm import tqdm
-
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 BASE_PATH = Path(__file__).parent.relative_to(Path.cwd())
 DATA_PATH = BASE_PATH / 'data'
@@ -47,6 +41,16 @@ def get_submit_pred_maybe(nlen:int, fp:Path=None) -> ndarray:
     return np.loadtxt(fp, dtype=np.int32)
   else:
     return np.ones(nlen, dtype=np.int32) * -1
+
+
+def make_split(X:ndarray, Y:ndarray, split:str='train', ratio:float=0.3) -> List[Tuple[ndarray, int]]:
+  data = [(x, y) for x, y in zip(X, Y)]
+  random.seed(SEED)
+  random.shuffle(data)
+  cp = int(len(data) * ratio)
+  if split == 'train': data = data[:-cp]
+  else:                data = data[-cp:]
+  return data
 
 
 def wav_norm(X:ndarray) -> ndarray:
