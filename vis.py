@@ -62,6 +62,8 @@ class App:
     self.var_hop_len = tk.IntVar(wnd, value=HOP_LEN)
     self.var_win_len = tk.IntVar(wnd, value=WIN_LEN)
     self.var_pseudo_sr = tk.IntVar(wnd, value=SAMPLE_RATE_NR)
+    self.var_tstart = tk.IntVar(wnd, value=0)
+    self.var_tend = tk.IntVar(wnd, value=NLEN-1)
 
     # top: query
     frm1 = ttk.Frame(wnd)
@@ -90,19 +92,30 @@ class App:
         cb.bind('<<ComboboxSelected>>', lambda evt: self.redraw())
         cb.pack(side=tk.LEFT)
 
-      frm12 = ttk.LabelFrame(frm1, text='Pseudo Sample Rate for NR')
+      frm12 = ttk.Frame(frm1)
       frm12.pack(expand=tk.YES, fill=tk.X)
       if True:
+        tk.Label(frm12, text='Pseudo SR for NR').pack(side=tk.LEFT)
         sc = tk.Scale(frm12, command=lambda _: self.redraw(), variable=self.var_pseudo_sr, orient=tk.HORIZONTAL, from_=320, to=4096, tickinterval=256, resolution=1)
         sc.pack(expand=tk.YES, fill=tk.X)
         self.sc = sc
 
-      frm13 = ttk.LabelFrame(frm1, text='Sample Index')
+      frm13 = ttk.Frame(frm1)
       frm13.pack(expand=tk.YES, fill=tk.X)
       if True:
+        tk.Label(frm13, text='Sample Index').pack(side=tk.LEFT)
         sc = tk.Scale(frm13, command=lambda _: self.redraw(), variable=self.var_idx, orient=tk.HORIZONTAL, from_=0, to=1000, tickinterval=500, resolution=1)
         sc.pack(expand=tk.YES, fill=tk.X)
         self.sc = sc
+
+      frm14 = ttk.Frame(frm1)
+      frm14.pack(expand=tk.YES, fill=tk.X)
+      if True:
+        tk.Label(frm14, text='Slice Left/Right').pack(side=tk.LEFT)
+        sc = tk.Scale(frm14, command=lambda _: self.redraw(), variable=self.var_tstart, orient=tk.HORIZONTAL, from_=0, to=NLEN-1, tickinterval=512, resolution=16)
+        sc.pack(side=tk.LEFT, expand=tk.YES, fill=tk.X)
+        sc = tk.Scale(frm14, command=lambda _: self.redraw(), variable=self.var_tend, orient=tk.HORIZONTAL, from_=0, to=NLEN-1, tickinterval=512, resolution=16)
+        sc.pack(side=tk.RIGHT, expand=tk.YES, fill=tk.X)
 
     # bottom: plot
     frm2 = ttk.Frame(wnd)
@@ -134,6 +147,11 @@ class App:
     hop_len = self.var_hop_len.get()
     win_len = self.var_win_len.get()
     pseudo_sr = self.var_pseudo_sr.get()
+    tstart = self.var_tstart.get()
+    tend = self.var_tend.get()
+
+    if tstart >= tend:
+      tend = tstart + 1
 
     if win_len >= n_fft:
       self.var_win_len.set(n_fft)
@@ -144,6 +162,7 @@ class App:
 
     try:
       x, y = self.X[idx], self.Y[idx]
+      x = x[tstart:tend]
       try: x = reduce_noise(x, sr=pseudo_sr, n_fft=n_fft, hop_length=hop_len, win_length=win_len)
       except: pass
       M = get_spec(x, n_fft, hop_len, win_len)

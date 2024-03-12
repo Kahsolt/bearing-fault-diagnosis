@@ -23,6 +23,8 @@ SAMPLE_RATE_NR = 1600    # pseudo sr for noisereduce
 N_FFT = 1024     # 512
 HOP_LEN = 512    # 16
 WIN_LEN = 1024   # 64
+
+NLEN = 4096
 LABLES = {
   0: '正常状态',
   1: '内圈故障',
