@@ -125,7 +125,7 @@ class App:
     frm2 = ttk.Frame(wnd)
     frm2.pack(side=tk.BOTTOM, expand=tk.YES, fill=tk.BOTH)
     if True:
-      fig, axs = plt.subplots(4, 1, figsize=(8, 6))
+      fig, axs = plt.subplots(5, 1, figsize=(8, 6))
       fig.tight_layout()
       cvs = FigureCanvasTkAgg(fig, frm2)
       cvs.get_tk_widget().pack(expand=tk.YES, fill=tk.BOTH)
@@ -176,15 +176,18 @@ class App:
       M = np.clip(np.log(np.abs(D) + 1e-15), a_min=1e-5, a_max=None)
       c0 = L.feature.rms(y=x, frame_length=n_fft, hop_length=hop_len, pad_mode='reflect')[0]
       zcr = L.feature.zero_crossing_rate(x, frame_length=n_fft, hop_length=hop_len)[0]
-      fft_data = np.abs(fft(np.expand_dims(x, axis=0), axis=1).squeeze(0))
-      fft_data = fft_data[:len(fft_data)//8]
+      spec = np.abs(fft(np.expand_dims(x, axis=0), axis=1).squeeze(0))
+      spec = spec[1:len(spec)//8+1]  # lowpass
+      ceps = np.abs(fft(np.expand_dims(spec, axis=0), axis=1).squeeze(0))
+      ceps = ceps[20:len(ceps)//4]
 
       self.axs: List[Axes]
-      ax0, ax1, ax2, ax3 = self.axs
+      ax0, ax1, ax2, ax3, ax4 = self.axs
       ax0.cla() ; ax0.plot(x, c=COLOR_MAP[y] if y < len(COLOR_MAP) else 'purple')
       ax1.cla() ; ax1.plot(c0, label='rms') ; ax1.plot(zcr, label='zcr') ; ax1.legend(loc='upper right')
       ax2.cla() ; sns.heatmap(M, ax=ax2, cbar=False) ; ax2.invert_yaxis()
-      ax3.cla() ; ax3.plot(fft_data)
+      ax3.cla() ; ax3.plot(spec)
+      ax4.cla() ; ax4.plot(ceps)
       self.cvs.draw()
 
       self.cur_idx = idx
