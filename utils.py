@@ -49,4 +49,4 @@ def wav_norm(X:ndarray) -> ndarray:
   X = (X - X_min) / (X_max - X_min)
   X -= 0.5    # [-0.5, 0.5]
   X -= X.mean(axis=-1, keepdims=True)   # remove DC offset
-  return X    # ~[-0.5, 0.5]
+  return X * 2    # ~[-1, 1]

@@ -20,7 +20,7 @@ import seaborn as sns
 from utils import *
 
 COLOR_MAP = ['grey', 'r', 'g', 'b']
-SPLITS = ['train', 'test1', 'test2']
+SPLITS = ['train', 'test1', 'test2', 'lowfid', 'highfid']
 N_FFT_LIST = [2**i for i in range(3, 12)]   # 8~2048
 HOP_LEN_LIST = [e//2 for e in N_FFT_LIST]   # 4~1024
 WIN_LEN_LIST = [e//2 for e in N_FFT_LIST]   # 4~1024
@@ -135,6 +135,9 @@ class App:
     split = self.var_split.get()
     if split == 'train':
       self.X, self.Y = get_data_train()
+    elif split.endswith('fid'):
+      self.X = np.load(LOG_PATH / f'{split}.npy')
+      self.Y = get_submit_pred_maybe(len(self.X))
     else:
       self.X = get_data_test(split)
       self.Y = get_submit_pred_maybe(len(self.X), args.fp)
