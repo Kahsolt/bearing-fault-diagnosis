@@ -4,6 +4,7 @@
 
 import pickle as pkl
 from zipfile import ZipFile
+from tqdm import tqdm
 from numba import njit, jit
 from scipy.io.wavfile import write as save_wav
 

@@ -12,6 +12,7 @@ Team Name: ⚪滚滚
 ### Quickstart
 
 - `pip install -r requirements.txt`
+  - you can manually ignore `# vis` part if you only need `run.py`
 - `python mk_data.py`
   - put all datasets at `data\*.zip`
 - `python run.py`

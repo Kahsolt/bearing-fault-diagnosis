@@ -15,7 +15,11 @@
 from argparse import ArgumentParser
 
 from scipy.fft import fft
-from sklearnex import patch_sklearn ; patch_sklearn()
+try:
+  from sklearnex import patch_sklearn
+  patch_sklearn()
+except:
+  print('>> not found package "sklearnex", ignored')
 from sklearn.neighbors import KNeighborsClassifier, RadiusNeighborsClassifier
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA

@@ -12,7 +12,7 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
-from run import *
+from run import data_aug, extract_fft_features
 from utils import *
 
 CMAP_4 = ListedColormap(
@@ -69,9 +69,7 @@ def run(args):
     Y = Y[~mask]
 
   #plot(pca(X), Y, title='pca(wav)')
-  D = extract_fft_features(X)
-  #D = np.log(D)
-
+  D = extract_fft_features(X) #; D = np.log(D)
   plot(pca(D), Y, title='pca(fft)')
 
 

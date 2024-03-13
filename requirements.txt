@@ -1,10 +1,13 @@
+# run
 numpy
 numba
 scipy
 scikit-learn
 scikit-learn-intelex
+tqdm
+
+# vis
 librosa
 noisereduce
 matplotlib
 seaborn
-tqdm
