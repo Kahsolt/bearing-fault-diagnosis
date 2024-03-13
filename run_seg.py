@@ -55,8 +55,10 @@ def run(args):
   acc = accuracy_score(Y, pred_train)
   print(f'>> train acc: {acc:.5%}')
 
-  ''' Infer (test2) '''
+  ''' Data (test2) '''
   S_test2_raw = get_data_test('test2')
+
+  ''' Infer by vote (test2) '''
   X_test2_round = []
   fid_round = []
   preds_round = []
@@ -77,12 +79,20 @@ def run(args):
   fid_mean = np.stack(fid_round, axis=-1).mean(axis=-1)
   pred_test2_mean = [mode(x).mode for x in np.stack(preds_round, axis=-1)]
 
-  ''' Submit '''
-  fp = LOG_PATH / 'submit_seg.csv'
+  plot_fft_ordered(X_test2_mean, pred_test2_mean, fid_mean, 'test2-seg-vote')
+  fp = LOG_PATH / 'submit_seg-vote.csv'
   print(f'>> save to {fp}')
-  print('pred_test2_cntr:', Counter(pred_test2_mean))
-  plot_fft_ordered(X_test2_mean, pred_test2_mean, fid_mean, 'test2-seg')
+  print('pred_test2_vote_cntr:', Counter(pred_test2_mean))
   np.savetxt(fp, pred_test2_mean, fmt='%d')
+
+  ''' Infer by averaging (test2) '''
+  pred_test2_avg, fid_avg = knn_infer(knn, X_test2_mean)
+
+  plot_fft_ordered(X_test2_mean, pred_test2_avg, fid_avg, 'test2-seg-avg')
+  fp = LOG_PATH / 'submit_seg-avg.csv'
+  print(f'>> save to {fp}')
+  print('pred_test2_avg_cntr:', Counter(pred_test2_avg))
+  np.savetxt(fp, pred_test2_avg, fmt='%d')
 
 
 if __name__ == '__main__':
