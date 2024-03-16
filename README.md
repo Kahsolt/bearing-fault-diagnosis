@@ -7,6 +7,7 @@
 Contest page: [https://www.industrial-bigdata.com/Challenge/title?competitionId=B1O9KWPEBIDJLIJ5ZL0EBXO3E4ITG2OI&type=](https://www.industrial-bigdata.com/Challenge/title?competitionId=B1O9KWPEBIDJLIJ5ZL0EBXO3E4ITG2OI&type=)  
 Problem provider：容知日新  
 Team Name: ⚪滚滚  
+Final rank: no rank, no award :(
 
 
 ### Quickstart
